@@ -7,11 +7,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"flag"
 	"log"
 	"os"
 	"os/signal"
 	"path"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/cilium/ebpf/link"
@@ -26,18 +28,38 @@ const (
 	symbol = "main.easyToFindFunctionName"
 )
 
-func tracedBinPath() string {
+func tracedBinPath(bin *string) []string {
+	if bin != nil && *bin != "" {
+		return strings.Split(*bin, ":")
+	}
 	ex, err := os.Executable()
 	if err != nil {
 		log.Fatal(err)
 	}
 	exPath := filepath.Dir(ex)
-	return path.Join(exPath, "testbin")
+	return []string{path.Join(exPath, "testbin")}
+}
+
+func instrumentBin(binPath string, objs bpfObjects) func() error {
+	log.Println("instrumenting", binPath)
+	ex, err := link.OpenExecutable(binPath)
+	if err != nil {
+		log.Fatalf("opening executable: %s", err)
+	}
+
+	// Open a Uprobe at the entry point of the symbol and attach the pre-compiled eBPF program to it.
+	up, err := ex.Uprobe(symbol, objs.UprobeTestbinTest, nil)
+	if err != nil {
+		log.Fatalf("creating uprobe: %s", err)
+	}
+	return up.Close
 }
 
 func main() {
 	stopper := make(chan os.Signal, 1)
 	signal.Notify(stopper, os.Interrupt, syscall.SIGTERM)
+	bin := flag.String("bin", "", "colon separated list of paths to the instrumented binaries")
+	flag.Parse()
 
 	// Allow the current process to lock memory for eBPF resources.
 	if err := rlimit.RemoveMemlock(); err != nil {
@@ -52,18 +74,11 @@ func main() {
 	defer objs.Close()
 
 	// Open an ELF binary and read its symbols.
-	binPath := tracedBinPath()
-	ex, err := link.OpenExecutable(binPath)
-	if err != nil {
-		log.Fatalf("opening executable: %s", err)
+	binPaths := tracedBinPath(bin)
+	for _, binPath := range binPaths {
+		cl := instrumentBin(binPath, objs)
+		defer cl()
 	}
-
-	// Open a Uprobe at the entry point of the symbol and attach the pre-compiled eBPF program to it.
-	up, err := ex.Uprobe(symbol, objs.UprobeTestbinTest, nil)
-	if err != nil {
-		log.Fatalf("creating uprobe: %s", err)
-	}
-	defer up.Close()
 
 	// Open a perf event reader from userspace on the PERF_EVENT_ARRAY map described in the eBPF C program.
 	rd, err := perf.NewReader(objs.Events, os.Getpagesize())
@@ -107,6 +122,7 @@ func main() {
 			continue
 		}
 
-		log.Printf("%v %s:%s argument: %v %v", event.Pid, binPath, symbol, event.Arg, event.Ret)
+		// TODO: add bin path support for multiple paths
+		log.Printf("%v %s:%s argument: %v %v", event.Pid, "binPath", symbol, event.Arg, event.Ret)
 	}
 }
