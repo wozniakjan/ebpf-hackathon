@@ -1,0 +1,3 @@
+FROM gcr.io/distroless/static:latest
+COPY testbin /bin/testbin
+ENTRYPOINT [ "/bin/testbin" ]
