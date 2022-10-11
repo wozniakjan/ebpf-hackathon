@@ -17,7 +17,6 @@ import (
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/perf"
 	"github.com/cilium/ebpf/rlimit"
-	"golang.org/x/sys/unix"
 )
 
 // $BPF_CLANG and $BPF_CFLAGS are set by the Makefile.
@@ -108,6 +107,6 @@ func main() {
 			continue
 		}
 
-		log.Printf("%s:%s return value: %s", binPath, symbol, unix.ByteSliceToString(event.Line[:]))
+		log.Printf("%v %s:%s argument: %v %v", event.Pid, binPath, symbol, event.Arg, event.Ret)
 	}
 }

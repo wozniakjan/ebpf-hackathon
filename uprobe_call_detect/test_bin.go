@@ -2,14 +2,15 @@ package main
 
 import "fmt"
 
-func easyToFindFunctionName() {
-	fmt.Println("executed")
+func easyToFindFunctionName(arg uint32) {
+	fmt.Println(arg)
 }
 
-func EasyToFindFunctionName() {
-	easyToFindFunctionName()
+func EasyToFindFunctionName(arg uint32) {
+	easyToFindFunctionName(arg)
 }
 
 func main() {
-	EasyToFindFunctionName()
+	EasyToFindFunctionName(1)
+	EasyToFindFunctionName(2)
 }

@@ -2,7 +2,8 @@ bpf_bpfel_x86.o: main.go
 	CPATH=../headers go generate ./...
 
 testbin: test_bin.go
-	go build -gcflags '-l' -o testbin ./test_bin.go
+	# turn of inlining and optimizations
+	go build -gcflags '-N -l' -o testbin ./test_bin.go
 
 tracer: main.go bpf_bpfel_x86.o
 	go build -o tracer ./main.go ./bpf_bpfel_x86.go
