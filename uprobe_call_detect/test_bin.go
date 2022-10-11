@@ -1,3 +1,6 @@
+// Sample application whose only purpose is to be in go and trivial to disassemble
+// when figuring out how to instrument with ebpf
+
 package main
 
 import (

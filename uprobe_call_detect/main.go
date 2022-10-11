@@ -1,3 +1,6 @@
+// This is an implementation of sample agent application that injects ebpf program as
+// a hook on a certain binary and function
+
 //go:build linux
 // +build linux
 
@@ -21,7 +24,7 @@ import (
 	"github.com/cilium/ebpf/rlimit"
 )
 
-// $BPF_CLANG and $BPF_CFLAGS are set by the Makefile.
+// generate bpf_bpfel_x86.go and compile bpf_bpfel_x86.o
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -cc clang -cflags "-O2 -g -Wall -Werror" -target native -type event bpf uprobe.c -- -I../headers
 
 const (
