@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/static:latest
+FROM ubuntu
 USER root
 COPY tracer /bin/tracer
 ENTRYPOINT [ "/bin/tracer" ]

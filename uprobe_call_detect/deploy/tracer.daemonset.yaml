@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tracer
+  labels:
+    tracer: tracer
+spec:
+  selector:
+    matchLabels:
+      name: tracer
+  template:
+    metadata:
+      labels:
+        name: tracer
+    spec:
+      containers:
+      - name: tracer
+        image: wozniakjan/tracer
+        command:
+        - /bin/bash
+        - -c
+        - |-
+          paths=$(find /host -name testbin | tr '\n' ':')
+          echo $paths
+          if [[ -z "$paths" ]]; then
+            echo "nothing to instrument"
+            sleep inf
+          else
+            /bin/tracer -bin="$paths"
+          fi
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+        volumeMounts:
+        - name: host
+          mountPath: /host
+        securityContext:
+          runAsUser: 0
+          privileged: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: host
+        hostPath:
+          path: /var/lib/containerd/

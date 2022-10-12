@@ -44,6 +44,9 @@ func tracedBinPath(bin *string) []string {
 }
 
 func instrumentBin(binPath string, objs bpfObjects) func() error {
+	if binPath == "" {
+		return nil
+	}
 	log.Println("instrumenting", binPath)
 	ex, err := link.OpenExecutable(binPath)
 	if err != nil {

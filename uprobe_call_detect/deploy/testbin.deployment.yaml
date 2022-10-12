@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: testbin
+  labels:
+    app: testbin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: testbin
+  template:
+    metadata:
+      labels:
+        app: testbin
+    spec:
+      containers:
+      - name: testbin
+        image: wozniakjan/testbin
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
