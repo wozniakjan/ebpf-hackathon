@@ -2,7 +2,7 @@
 IMG := wozniakjan
 
 # compile eBPF program using cillium/ebpf library 
-bpf_bpfel_x86.o: main.go
+bpf_bpfel_x86.o: main.go uprobe.c
 	CPATH=../headers go generate ./...
 
 # testbin is a sample application used for inspection by tracer
@@ -29,10 +29,13 @@ push-%:
 push-images: push-testbin push-tracer
 
 # run both testbin and tracer locally with default config
-.PHONY: run
-run: tracer testbin
-	./testbin > /dev/null &
-	sudo ./tracer	
+.PHONY: run-tracer
+run-tracer:
+	sudo ./tracer
+
+.PHONY: run-testbin
+run-testbin:
+	./testbin
 
 .PHONY: clean
 clean:
